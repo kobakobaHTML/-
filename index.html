@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>練習記録アプリ（削除ボタン付き）</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body class="p-4">
+
+  <h1 id="pageTitle">🎓 練習記録</h1>
+
+  <form id="timeForm" class="mb-4">
+    <div class="mb-3">
+      <label for="practiceType" class="form-label">練習の種類</label>
+      <input type="text" id="practiceType" class="form-control" placeholder="例：HTML、ピアノ、英語" required>
+    </div>
+    <div class="mb-3">
+      <label for="songInput" class="form-label">内容（曲名や課題名）</label>
+      <input type="text" id="songInput" class="form-control" required>
+    </div>
+    <div class="mb-3">
+      <label for="minutesInput" class="form-label">練習時間（分）</label>
+      <input type="number" id="minutesInput" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-success">記録する</button>
+  </form>
+
+  <h2>記録一覧</h2>
+  <table class="table table-bordered table-striped">
+    <thead class="table-light">
+      <tr>
+        <th>#</th>
+        <th>日付</th>
+        <th>種類</th>
+        <th>内容</th>
+        <th>時間（分）</th>
+        <th>削除</th>
+      </tr>
+    </thead>
+    <tbody id="recordTableBody">
+      <!-- 記録をここに表示 -->
+    </tbody>
+  </table>
+
+  <script>
+    const form = document.getElementById("timeForm");
+    const practiceType = document.getElementById("practiceType");
+    const songInput = document.getElementById("songInput");
+    const minutesInput = document.getElementById("minutesInput");
+    const tableBody = document.getElementById("recordTableBody");
+    const title = document.getElementById("pageTitle");
+
+    let records = JSON.parse(localStorage.getItem("practiceRecords")) || [];
+
+    function displayRecords() {
+      tableBody.innerHTML = "";
+      records.forEach((record, index) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${record.date}</td>
+          <td>${record.type}</td>
+          <td>${record.song}</td>
+          <td>${record.minutes}</td>
+          <td>
+            <button class="btn btn-sm btn-danger" onclick="deleteRecord(${index})">削除</button>
+          </td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    function updateTitle() {
+      const type = practiceType.value.trim();
+      title.textContent = type ? `🎓 ${type} 練習記録` : "🎓 練習記録";
+    }
+
+    function deleteRecord(index) {
+      if (confirm("この記録を本当に消してええん？")) {
+        records.splice(index, 1); // 配列から削除
+        localStorage.setItem("practiceRecords", JSON.stringify(records));
+        displayRecords(); // 表を更新
+      }
+    }
+
+    displayRecords();
+    updateTitle();
+
+    practiceType.addEventListener("input", updateTitle);
+
+    form.addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      const type = practiceType.value.trim();
+      const song = songInput.value.trim();
+      const minutes = Number(minutesInput.value);
+      const now = new Date();
+      const date = now.toLocaleDateString();
+
+      if (!type || !song || minutes <= 0) {
+        alert("全部ちゃんと入れてな！");
+        return;
+      }
+
+      const newRecord = {
+        date: date,
+        type: type,
+        song: song,
+        minutes: minutes
+      };
+
+      records.push(newRecord);
+      localStorage.setItem("practiceRecords", JSON.stringify(records));
+      displayRecords();
+      updateTitle();
+
+      // 入力リセット
+      practiceType.value = "";
+      songInput.value = "";
+      minutesInput.value = "";
+    });
+
+    // グローバルに関数を公開（onclickで使うため）
+    window.deleteRecord = deleteRecord;
+  </script>
+
+</body>
+</html>
