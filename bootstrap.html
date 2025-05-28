@@ -1,43 +1,141 @@
 <!DOCTYPE html>
-<html lang="ja">
-    <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>こばさんの自己紹介</title>
+<html lang="ja"> <!-- 日本語サイトなのでlang属性 -->
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
+  <!-- SEO向けタイトル -->
+  <title>練習記録アプリ｜簡単に学習・趣味の練習時間を管理</title>
+  
+  <!-- メタディスクリプション（検索結果に表示される説明文） -->
+  <meta name="description" content="HTML、ピアノ、英語などの練習時間を簡単に記録できる無料アプリ。小学生から大人まで使いやすいシンプルな練習記録ツールです。">
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
+<body class="p-4">
 
-    <body>
-        <header>
-            <div>
-                <h1>🎉コバさんの自己紹介ページ🎉</h1>
-            </div>
-        </header>
-        <main>
-        <div>
-            <h2>好きな食べ物</h2>
-            <table class="table table-striped table-hover">
-                <tr><th>ハンバーガー🍔</th></tr>
-                <tr><th>たこ焼き🐙</th></tr>
-                <tr><th>ラーメン🍜</th></tr>
-            </table>
-        </div>
-        <div>
-            <h2>趣味</h2>
-            <p>いまウェブサイトを作るのにはまってる！<br>このページも自分で作った！</p>
-        </div>
-        <div>
-            <h2>好きなゲーム</h2>
-            <table class="table table-striped table-hover">
-                <tr><th>マインクラフト</th></tr>
-                <tr><th>マリオカート</th></tr>
-                <tr><th>テトリス</th></tr>
-            </table>
-        </div>
-        <p>自分の学んだことを生かしてコードを書いてみました！</p>
-        </main>
-        <footer style="background-color:#333; color:white; padding:10px; text-align:center;">
-  © 2025 コバさん All rights reserved.
-</footer>
-    </body>
+  <header>
+    <h1 id="pageTitle">🎓 練習記録アプリ</h1>
+    <p>毎日の練習時間や内容を簡単に記録して、上達を実感しよう！</p>
+  </header>
+
+  <main>
+    <form id="timeForm" class="mb-4" aria-label="練習記録フォーム">
+      <div class="mb-3">
+        <label for="practiceType" class="form-label">練習の種類（例：HTML、ピアノ、英語）</label>
+        <input type="text" id="practiceType" class="form-control" placeholder="練習の種類を入力" required aria-required="true" />
+      </div>
+      <div class="mb-3">
+        <label for="songInput" class="form-label">内容（曲名や課題名など）</label>
+        <input type="text" id="songInput" class="form-control" placeholder="内容を入力" required aria-required="true" />
+      </div>
+      <div class="mb-3">
+        <label for="minutesInput" class="form-label">練習時間（分）</label>
+        <input type="number" id="minutesInput" class="form-control" placeholder="練習した時間を分で入力" required aria-required="true" min="1" />
+      </div>
+      <button type="submit" class="btn btn-success">記録する</button>
+    </form>
+
+    <section aria-label="練習記録一覧">
+      <h2>記録一覧</h2>
+      <table class="table table-bordered table-striped">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">日付</th>
+            <th scope="col">種類</th>
+            <th scope="col">内容</th>
+            <th scope="col">時間（分）</th>
+            <th scope="col">削除</th>
+          </tr>
+        </thead>
+        <tbody id="recordTableBody">
+          <!-- 記録をここに表示 -->
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById("timeForm");
+    const practiceType = document.getElementById("practiceType");
+    const songInput = document.getElementById("songInput");
+    const minutesInput = document.getElementById("minutesInput");
+    const tableBody = document.getElementById("recordTableBody");
+    const title = document.getElementById("pageTitle");
+
+    let records = JSON.parse(localStorage.getItem("practiceRecords")) || [];
+
+    function displayRecords() {
+      tableBody.innerHTML = "";
+      records.forEach((record, index) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${record.date}</td>
+          <td>${record.type}</td>
+          <td>${record.song}</td>
+          <td>${record.minutes}</td>
+          <td>
+            <button class="btn btn-sm btn-danger" onclick="deleteRecord(${index})" aria-label="記録${index + 1}を削除">削除</button>
+          </td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    function updateTitle() {
+      const type = practiceType.value.trim();
+      title.textContent = type ? `🎓 ${type} 練習記録アプリ` : "🎓 練習記録アプリ";
+    }
+
+    function deleteRecord(index) {
+      if (confirm("この記録を本当に消してええん？")) {
+        records.splice(index, 1);
+        localStorage.setItem("practiceRecords", JSON.stringify(records));
+        displayRecords();
+      }
+    }
+
+    displayRecords();
+    updateTitle();
+
+    practiceType.addEventListener("input", updateTitle);
+
+    form.addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      const type = practiceType.value.trim();
+      const song = songInput.value.trim();
+      const minutes = Number(minutesInput.value);
+      const now = new Date();
+      const date = now.toLocaleDateString();
+
+      if (!type || !song || minutes <= 0) {
+        alert("全部ちゃんと入れてな！");
+        return;
+      }
+
+      const newRecord = {
+        date: date,
+        type: type,
+        song: song,
+        minutes: minutes
+      };
+
+      records.push(newRecord);
+      localStorage.setItem("practiceRecords", JSON.stringify(records));
+      displayRecords();
+      updateTitle();
+
+      // 入力リセット
+      practiceType.value = "";
+      songInput.value = "";
+      minutesInput.value = "";
+    });
+
+    window.deleteRecord = deleteRecord;
+  </script>
+
+</body>
 </html>
